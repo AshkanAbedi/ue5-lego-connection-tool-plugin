@@ -1,0 +1,33 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "LegoConnectionTool",
+	"Description": "The connection tool plugin for ALegoActor in Unreal Engine",
+	"Category": "Editor",
+	"CreatedBy": "Ashkan Abedi",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"EnabledByDefault":true,
+	"Modules": [
+		{
+			"Name": "LegoConnectionTool",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}, 
+		{
+		
+			"Name": "LegoConnectionToolEditor",
+			"Type": "Editor",
+			"LoadingPhase": "PostEngineInit"
+		
+		}
+	],
+	
+}

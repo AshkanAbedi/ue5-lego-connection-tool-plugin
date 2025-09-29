@@ -1,0 +1,81 @@
+﻿// Fill out your copyright notice in the Description page of Project Settings.
+#include "LegoActor.h"
+
+ALegoActor::ALegoActor()
+{
+	PrimaryActorTick.bCanEverTick = false; // Should it tick or not? maybe for updating its data in run-time?! Let's put false for now...I don't think it should tick.
+	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root Component"));
+
+	// TODO: Maybe add a default shape here to be more designer-friendly.
+	// TODO: And also add a function of changing the color and size of the default shape in the editor
+}
+
+void ALegoActor::OnConstruction(const FTransform& Transform)
+{
+	Super::OnConstruction(Transform);
+	AssignGuid();
+}
+
+void ALegoActor::AssignGuid()
+{
+	if (!ActorGuid.IsValid())
+	{
+		ActorGuid = FGuid::NewGuid();
+	}
+}
+
+void ALegoActor::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+	const FName PropertyName = (PropertyChangedEvent.Property != nullptr) ? PropertyChangedEvent.Property->GetFName() : NAME_None; 
+	if (PropertyName == GET_MEMBER_NAME_CHECKED(ALegoActor, Size)) // if the size property changes, then the bounding sphere will change as well;
+								                                   // So I think we need to update the data here. For both the actor and the connected actor to it.
+	{
+		UpdateAllConnectionData();
+		for (const FConnectionData& Connection : Connections)
+		{
+			if (Connection.ConnectedActor)
+			{
+				Connection.ConnectedActor->UpdateAllConnectionData();
+			}
+		}
+	}
+}
+
+void ALegoActor::PostEditMove(bool bFinished)
+{
+	Super::PostEditMove(bFinished);
+	if (bFinished)
+	{
+		UpdateAllConnectionData();
+		for (const FConnectionData& Connection : Connections) // Same reason as PostEditChangeProperty applies here I think.
+		{
+			if (Connection.ConnectedActor)
+			{
+				Connection.ConnectedActor->UpdateAllConnectionData();
+			}
+		}
+	}
+}
+
+void ALegoActor::PostLoad()
+{
+	Super::PostLoad();
+	AssignGuid(); // Need a test here;
+	//TODO: add a log for testing.
+}
+
+
+void ALegoActor::BeginPlay()
+{
+	Super::BeginPlay();
+}
+
+
+
+void ALegoActor::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+}
+
+
