@@ -22,7 +22,7 @@ struct FConnectionData
 	GENERATED_BODY()
 	
 	UPROPERTY(VisibleAnywhere, Category="Connection Settings")
-	TObjectPtr<ALegoActor> ConnectedActor = nullptr;
+	TWeakObjectPtr<ALegoActor> ConnectedActor = nullptr; // I'm not sure whether weak pointer is better here or a strong pointer?! for now, let's use weak...
 	
 	UPROPERTY(VisibleAnywhere, Category="Connection Settings")
 	bool bHasLOS = false; // for checking line of sight
@@ -66,7 +66,7 @@ public:
 	UPROPERTY(VisibleAnywhere, Category="Lego Settings", AdvancedDisplay)
 	FGuid UniqueActorGuid; // I'm adding this here for serialization later.
 
-//---------------------
+//-------------------------
 //These are for making the actor more designer-friendly; To have a starting shape/size/color
 	UPROPERTY()
 	UStaticMesh* CachedBox;
@@ -79,18 +79,18 @@ public:
 	
 	UPROPERTY()
 	UStaticMesh* CachedConvex;
-//----------------------
+//-------------------------
 
 	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 	virtual void PostEditMove(bool bFinished) override; // I'm overriding this here because we need the data to be updated if we move the actor in the level.
 	virtual void PostLoad() override; // I think this will be necessary as well for deserialization, maybe?! let's see...
+	void ChangeShape(); // For changing the shape in-editor
+	void ChangeColor(); // for changing the color in-editor
 
 //--------------------------
 //These are the functions that I need to call from the editor tool. TODO: Maybe I'll add a Macro for it later...
-	UFUNCTION(CallInEditor, Category = "ALegoActor Settings")
 	void AddConnection(ALegoActor* OtherActor);
-
 	void RemoveConnection(ALegoActor* OtherActor);
 	bool IsConnectedTo(const ALegoActor* OtherActor);
 	void UpdateConnectionData(FConnectionData& ConnectionData);

@@ -22,9 +22,8 @@ ALegoActor::ALegoActor()
 	if (BoxMesh.Succeeded()) CachedConvex = ConvexMesh.Object;
 
 	StaticMeshComponent->SetStaticMesh(CachedBox);
-
-
-	// TODO: And also add a function of changing the color and size of the default shape in the editor
+	
+	// TODO: Also add a function of changing the shape/color/size of the actor in the editor
 }
 
 void ALegoActor::OnConstruction(const FTransform& Transform)
@@ -44,14 +43,20 @@ void ALegoActor::AssignGuid()
 void ALegoActor::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
-	const FName PropertyName = (PropertyChangedEvent.Property != nullptr) ? PropertyChangedEvent.Property->GetFName() : NAME_None; 
+	const FName PropertyName = (PropertyChangedEvent.Property != nullptr) ? PropertyChangedEvent.Property->GetFName() : NAME_None;
+	
+	if (PropertyName == GET_MEMBER_NAME_CHECKED(ALegoActor, Shape))
+	{
+		ChangeShape();
+	}
+	
 	if (PropertyName == GET_MEMBER_NAME_CHECKED(ALegoActor, Size)) // if the size property changes, then the bounding sphere will change as well;
 								                                   // So I think we need to update the data here. For both the actor and the connected actor to it.
 	{
 		UpdateAllConnectionData();
 		for (const FConnectionData& Connection : Connections)
 		{
-			if (Connection.ConnectedActor)
+			if (Connection.ConnectedActor.IsValid())
 			{
 				Connection.ConnectedActor->UpdateAllConnectionData();
 			}
@@ -67,7 +72,7 @@ void ALegoActor::PostEditMove(bool bFinished)
 		UpdateAllConnectionData();
 		for (const FConnectionData& Connection : Connections) // Same reason as PostEditChangeProperty applies here I think.
 		{
-			if (Connection.ConnectedActor)
+			if (Connection.ConnectedActor.IsValid())
 			{
 				Connection.ConnectedActor->UpdateAllConnectionData();
 			}
@@ -80,6 +85,26 @@ void ALegoActor::PostLoad()
 	Super::PostLoad();
 	AssignGuid(); // Need a test here;
 	//TODO: add a log for testing.
+}
+
+void ALegoActor::ChangeShape()
+{
+	switch (Shape)
+	{
+	case EShapeType::Box:
+		StaticMeshComponent->SetStaticMesh(CachedBox);
+		break;
+	case EShapeType::Sphere:
+		StaticMeshComponent->SetStaticMesh(CachedSphere);
+		break;
+	case EShapeType::Capsule:
+		StaticMeshComponent->SetStaticMesh(CachedCapsule);
+		break;
+	case EShapeType::Convex:
+		StaticMeshComponent->SetStaticMesh(CachedConvex);
+		break;
+	default: break;
+	}
 }
 
 void ALegoActor::AddConnection(ALegoActor* OtherActor)
@@ -133,7 +158,7 @@ void ALegoActor::UpdateAllConnectionData()
 
 void ALegoActor::UpdateConnectionData(FConnectionData& ConnectionData)
 {
-	ALegoActor* OtherActor = ConnectionData.ConnectedActor;
+	ALegoActor* OtherActor = ConnectionData.ConnectedActor.Get();
 	if (!OtherActor || !GetWorld()) return;
 
 	const FVector Start = GetActorLocation();

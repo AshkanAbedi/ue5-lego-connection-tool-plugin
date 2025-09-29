@@ -44,9 +44,9 @@ void FLegoActorDetailsCustomization::CustomizeDetails(IDetailLayoutBuilder& Deta
 	{
 		for (const FConnectionData& Connection : SelectedLegoActor->Connections)
 		{
-			if (Connection.ConnectedActor)
+			if (Connection.ConnectedActor.IsValid())
 			{
-				ALegoActor* ActorToRemove = Connection.ConnectedActor;
+				ALegoActor* ActorToRemove = Connection.ConnectedActor.Get();
 				
 				Category.AddCustomRow(FText::FromString(TEXT("Connection")))
 				.NameContent()
