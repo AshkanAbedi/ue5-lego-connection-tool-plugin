@@ -58,16 +58,16 @@ public:
 	UPROPERTY(VisibleAnywhere, Category="ALegoActor Settings", Meta=(DisplayName="Connections"))
 	TArray<FConnectionData> Connections;
 
-	UPROPERTY(VisibleAnywhere, Category="ALegoActor Settings", AdvancedDisplay)
-	FGuid ActorGuid; // I'm adding this here for serialization later.
+	/*UPROPERTY(VisibleAnywhere, Category="ALegoActor Settings", AdvancedDisplay)
+	FGuid ActorGuid;*/ // I'm adding this here for serialization later.
 
 	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 	virtual void PostEditMove(bool bFinished) override; // I'm overriding this here because we need the data to be updated if we move the actor in the level.
-	virtual void PostLoad() override; // I think this will be necessary as well for deserialization, maybe?! let's see..
+	virtual void PostLoad() override; // I think this will be necessary as well for deserialization, maybe?! let's see...
 
 //--------------------------
-//These are the functions that I need to call from the edtor tool. TODO: Maybe I'll add a Macro for it later...
+//These are the functions that I need to call from the editor tool. TODO: Maybe I'll add a Macro for it later...
 	void AddConnection(ALegoActor* OtherActor);
 	void RemoveConnection(ALegoActor* OtherActor);
 	bool IsConnectedTo(const ALegoActor* OtherActor);
@@ -79,5 +79,5 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
-	void AssignGuid();
+	/*void AssignGuid();*/
 };

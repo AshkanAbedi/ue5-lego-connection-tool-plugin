@@ -13,16 +13,16 @@ ALegoActor::ALegoActor()
 void ALegoActor::OnConstruction(const FTransform& Transform)
 {
 	Super::OnConstruction(Transform);
-	AssignGuid();
+	//AssignGuid();
 }
 
-void ALegoActor::AssignGuid()
+/*void ALegoActor::AssignGuid()
 {
 	if (!ActorGuid.IsValid())
 	{
 		ActorGuid = FGuid::NewGuid();
 	}
-}
+}*/
 
 void ALegoActor::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
@@ -61,7 +61,7 @@ void ALegoActor::PostEditMove(bool bFinished)
 void ALegoActor::PostLoad()
 {
 	Super::PostLoad();
-	AssignGuid(); // Need a test here;
+	//AssignGuid(); // Need a test here;
 	//TODO: add a log for testing.
 }
 

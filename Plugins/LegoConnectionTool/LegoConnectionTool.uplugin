@@ -14,7 +14,7 @@
 	"IsBetaVersion": false,
 	"IsExperimentalVersion": false,
 	"Installed": false,
-	"EnabledByDefault":true,
+	"EnabledByDefault": true,
 	"Modules": [
 		{
 			"Name": "LegoConnectionTool",
@@ -28,6 +28,6 @@
 			"LoadingPhase": "PostEngineInit"
 		
 		}
-	],
+	]
 	
 }
