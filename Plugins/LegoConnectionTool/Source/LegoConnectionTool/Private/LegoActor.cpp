@@ -13,7 +13,7 @@ ALegoActor::ALegoActor()
 void ALegoActor::OnConstruction(const FTransform& Transform)
 {
 	Super::OnConstruction(Transform);
-	//AssignGuid();
+	//AssignGuid();` 
 }
 
 /*void ALegoActor::AssignGuid()
