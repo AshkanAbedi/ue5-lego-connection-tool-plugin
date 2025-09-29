@@ -1,28 +1,45 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 #include "LegoActor.h"
+#include "Components/StaticMeshComponent.h"
+#include "UObject/ConstructorHelpers.h"
 
 ALegoActor::ALegoActor()
 {
 	PrimaryActorTick.bCanEverTick = false; // Should it tick or not? maybe for updating its data in run-time?! Let's put false for now...I don't think it should tick.
-	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root Component"));
+	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
+	RootComponent = StaticMeshComponent;
 
-	// TODO: Maybe add a default shape here to be more designer-friendly.
+	// TODO: Maybe add a default shape here to be more designer-friendly-->DONE
+
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> BoxMesh(TEXT("/Engine/BasicShapes/Cube.Cube"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereMesh(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> CapsuleMesh(TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> ConvexMesh(TEXT("/Engine/BasicShapes/Cone.Cone"));
+
+	if (BoxMesh.Succeeded()) CachedBox = BoxMesh.Object;
+	if (BoxMesh.Succeeded()) CachedSphere = SphereMesh.Object;
+	if (BoxMesh.Succeeded()) CachedCapsule = CapsuleMesh.Object;
+	if (BoxMesh.Succeeded()) CachedConvex = ConvexMesh.Object;
+
+	StaticMeshComponent->SetStaticMesh(CachedBox);
+
+
 	// TODO: And also add a function of changing the color and size of the default shape in the editor
 }
 
 void ALegoActor::OnConstruction(const FTransform& Transform)
 {
 	Super::OnConstruction(Transform);
-	//AssignGuid();` 
+	AssignGuid();
 }
 
-/*void ALegoActor::AssignGuid()
+void ALegoActor::AssignGuid()
 {
-	if (!ActorGuid.IsValid())
+	if (!UniqueActorGuid.IsValid())
 	{
-		ActorGuid = FGuid::NewGuid();
+		UniqueActorGuid = FGuid::NewGuid();
 	}
-}*/
+}
 
 void ALegoActor::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
@@ -61,7 +78,7 @@ void ALegoActor::PostEditMove(bool bFinished)
 void ALegoActor::PostLoad()
 {
 	Super::PostLoad();
-	//AssignGuid(); // Need a test here;
+	AssignGuid(); // Need a test here;
 	//TODO: add a log for testing.
 }
 
@@ -146,8 +163,6 @@ void ALegoActor::BeginPlay()
 {
 	Super::BeginPlay();
 }
-
-
 
 void ALegoActor::Tick(float DeltaTime)
 {

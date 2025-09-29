@@ -4,6 +4,8 @@
 #include "LegoActor.generated.h"
 
 class ALegoActor;
+class UStaticMesh;
+class UStaticMeshComponent;
 
 UENUM()
 enum class EShapeType : uint8
@@ -45,21 +47,39 @@ class LEGOCONNECTIONTOOL_API ALegoActor : public AActor
 public:
 	ALegoActor();
 	virtual void Tick(float DeltaTime) override;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TObjectPtr<UStaticMeshComponent> StaticMeshComponent;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ALegoActor Settings")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Lego Settings")
 	FLinearColor Color = FLinearColor::White;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ALegoActor Settings")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Lego Settings")
 	EShapeType Shape = EShapeType::Box;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ALegoActor Settings", Meta=(ClampMin="1.0", ClampMax="100.0", UIMin="1.0", UIMax="100.0"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Lego Settings", Meta=(ClampMin="1.0", ClampMax="100.0", UIMin="1.0", UIMax="100.0"))
 	float Size = 10.0f;
 
-	UPROPERTY(VisibleAnywhere, Category="ALegoActor Settings", Meta=(DisplayName="Connections"))
+	UPROPERTY(VisibleAnywhere, Category="Lego Settings", Meta=(DisplayName="Connections"))
 	TArray<FConnectionData> Connections;
 
-	/*UPROPERTY(VisibleAnywhere, Category="ALegoActor Settings", AdvancedDisplay)
-	FGuid ActorGuid;*/ // I'm adding this here for serialization later.
+	UPROPERTY(VisibleAnywhere, Category="Lego Settings", AdvancedDisplay)
+	FGuid UniqueActorGuid; // I'm adding this here for serialization later.
+
+//---------------------
+//These are for making the actor more designer-friendly; To have a starting shape/size/color
+	UPROPERTY()
+	UStaticMesh* CachedBox;
+
+	UPROPERTY()
+	UStaticMesh* CachedSphere;
+	
+	UPROPERTY()
+	UStaticMesh* CachedCapsule;
+	
+	UPROPERTY()
+	UStaticMesh* CachedConvex;
+//----------------------
 
 	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
@@ -68,7 +88,9 @@ public:
 
 //--------------------------
 //These are the functions that I need to call from the editor tool. TODO: Maybe I'll add a Macro for it later...
+	UFUNCTION(CallInEditor, Category = "ALegoActor Settings")
 	void AddConnection(ALegoActor* OtherActor);
+
 	void RemoveConnection(ALegoActor* OtherActor);
 	bool IsConnectedTo(const ALegoActor* OtherActor);
 	void UpdateConnectionData(FConnectionData& ConnectionData);
@@ -79,5 +101,5 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
-	/*void AssignGuid();*/
+	void AssignGuid();
 };
