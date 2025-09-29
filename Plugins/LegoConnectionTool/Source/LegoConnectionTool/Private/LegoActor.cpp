@@ -65,6 +65,82 @@ void ALegoActor::PostLoad()
 	//TODO: add a log for testing.
 }
 
+void ALegoActor::AddConnection(ALegoActor* OtherActor)
+{
+	if (!OtherActor || OtherActor == this || GetLevel() != OtherActor->GetLevel())
+	{
+		return; // Based on the task requirement, the connected actor should be unique; it can't be the actor itself, it can't be null, and it should be on the same level. 
+	}
+
+	if (!IsConnectedTo(OtherActor)) // For checking if the other actor is not already connected
+	{
+		FConnectionData NewConnection;
+		NewConnection.ConnectedActor = OtherActor;
+		Connections.Add(NewConnection);
+		UpdateConnectionData(Connections.Last());
+	}
+
+	if (!OtherActor->IsConnectedTo(this)) // for bidirectionality
+	{
+		OtherActor->AddConnection(this);
+	}
+}
+
+void ALegoActor::RemoveConnection(ALegoActor* OtherActor)
+{
+	if (!OtherActor) return;
+	
+	Connections.RemoveAll([OtherActor](const FConnectionData& Connection){
+		return Connection.ConnectedActor == OtherActor; // Cool new thing that I've learned...This function will go through the array and remove the one that we specify using lambda here.
+	});
+	
+	if (OtherActor->IsConnectedTo(this))
+	{
+		OtherActor->RemoveConnection(this);
+	}
+}
+
+bool ALegoActor::IsConnectedTo(const ALegoActor* OtherActor)
+{
+	if (!OtherActor) return false;
+	return Connections.Contains(OtherActor);
+}
+
+void ALegoActor::UpdateAllConnectionData()
+{
+	for (FConnectionData& ConnectionData : Connections)
+	{
+		UpdateConnectionData(ConnectionData);
+	}
+}
+
+void ALegoActor::UpdateConnectionData(FConnectionData& ConnectionData)
+{
+	ALegoActor* OtherActor = ConnectionData.ConnectedActor;
+	if (!OtherActor || !GetWorld()) return;
+
+	const FVector Start = GetActorLocation();
+	const FVector End = OtherActor->GetActorLocation();
+
+	// Line of sight test
+	FHitResult HitResult;
+	FCollisionQueryParams CollisionParams;
+	CollisionParams.AddIgnoredActor(this);
+	CollisionParams.AddIgnoredActor(OtherActor);
+	GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, CollisionParams);
+	ConnectionData.bHasLOS = !HitResult.bBlockingHit;
+
+	// Closes point on Bounding Sphere
+	const FVector DirectionToOther = (End - Start).GetSafeNormal();
+	ConnectionData.ClosestPointOnThisActor = Start + DirectionToOther * (this->Size / 2.0f);
+
+	// Forward direction angle difference
+	const FVector ThisActorForward = GetActorForwardVector();
+	const FVector OtherActorForward = OtherActor->GetActorForwardVector();
+	const float DotProduct = FVector::DotProduct(ThisActorForward, OtherActorForward);
+	ConnectionData.ForwardAngleDifference = FMath::Acos(DotProduct); // Radians
+	ConnectionData.ForwardAngleDifference = FMath::RadiansToDegrees(ConnectionData.ForwardAngleDifference);
+}
 
 void ALegoActor::BeginPlay()
 {
