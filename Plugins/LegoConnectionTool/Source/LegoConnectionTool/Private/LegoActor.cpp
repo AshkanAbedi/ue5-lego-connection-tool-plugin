@@ -2,6 +2,7 @@
 #include "LegoActor.h"
 #include "Components/StaticMeshComponent.h"
 #include "UObject/ConstructorHelpers.h"
+#include "LegoLevelSerializer.h"
 
 ALegoActor::ALegoActor()
 {
@@ -30,13 +31,15 @@ void ALegoActor::OnConstruction(const FTransform& Transform)
 {
 	Super::OnConstruction(Transform);
 	AssignGuid();
+	// TODO: Let's put a log here for testing...
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, UniqueActorGuid.ToString());
 }
 
 void ALegoActor::AssignGuid()
 {
 	if (!UniqueActorGuid.IsValid())
 	{
-		UniqueActorGuid = FGuid::NewGuid();
+		UniqueActorGuid = FGuid::NewGuid(); // For serialization...
 	}
 }
 
@@ -83,7 +86,7 @@ void ALegoActor::PostEditMove(bool bFinished)
 void ALegoActor::PostLoad()
 {
 	Super::PostLoad();
-	AssignGuid(); // Need a test here;
+	AssignGuid();
 	//TODO: add a log for testing.
 }
 
@@ -133,7 +136,7 @@ void ALegoActor::RemoveConnection(ALegoActor* OtherActor)
 	if (!OtherActor) return;
 	
 	Connections.RemoveAll([OtherActor](const FConnectionData& Connection){
-		return Connection.ConnectedActor == OtherActor; // Cool new thing that I've learned...This function will go through the array and remove the one that we specify using lambda here.
+		return Connection.ConnectedActor == OtherActor; // Cool new thing that I've learned...This function will go through an array and remove the one that we specify using lambda here.
 	});
 	
 	if (OtherActor->IsConnectedTo(this))
@@ -173,15 +176,36 @@ void ALegoActor::UpdateConnectionData(FConnectionData& ConnectionData)
 	ConnectionData.bHasLOS = !HitResult.bBlockingHit;
 
 	// Closes point on Bounding Sphere
-	const FVector DirectionToOther = (End - Start).GetSafeNormal();
-	ConnectionData.ClosestPointOnThisActor = Start + DirectionToOther * (this->Size / 2.0f);
+	if (StaticMeshComponent)
+	{
+		FBoxSphereBounds ThisActorBounds = StaticMeshComponent->Bounds;
+		FBoxSphereBounds OtherActorBounds = StaticMeshComponent->Bounds;
+		const FVector StartPoint = ThisActorBounds.Origin;
+		const FVector EndPoint = OtherActorBounds.Origin;
+		const FVector DirectionToOther = (End - Start).GetSafeNormal();
+		ConnectionData.ClosestPointOnThisActor = ThisActorBounds.Origin + DirectionToOther * ThisActorBounds.SphereRadius;
+	}
 
 	// Forward direction angle difference
 	const FVector ThisActorForward = GetActorForwardVector();
 	const FVector OtherActorForward = OtherActor->GetActorForwardVector();
-	const float DotProduct = FVector::DotProduct(ThisActorForward, OtherActorForward);
-	ConnectionData.ForwardAngleDifference = FMath::Acos(DotProduct); // Radians
-	ConnectionData.ForwardAngleDifference = FMath::RadiansToDegrees(ConnectionData.ForwardAngleDifference);
+	const float DotProduct = FMath::Clamp(FVector::DotProduct(ThisActorForward, OtherActorForward), -1.f, 1.f); // Clamping the dot product to avoid edge cases....
+	const float AngleOfVectors = FMath::Acos(DotProduct); // This is in radians...
+	ConnectionData.ForwardAngleDifference = FMath::RadiansToDegrees(AngleOfVectors);
+}
+
+void ALegoActor::TestSerialize()
+{
+	FString Json;
+	ULegoLevelSerializer::SerializeLevel(GetWorld(), Json, TEXT("LegoTest.json"));
+	UE_LOG(LogTemp, Log, TEXT("Serialized JSON:\n%s"), *Json);
+}
+
+void ALegoActor::TestDeserialize()
+{
+	FString Json;
+	FFileHelper::LoadFileToString(Json, *(FPaths::ProjectSavedDir() / TEXT("LegoTest.json")));
+	ULegoLevelSerializer::DeserializeLevel(GetWorld(), Json);
 }
 
 void ALegoActor::BeginPlay()

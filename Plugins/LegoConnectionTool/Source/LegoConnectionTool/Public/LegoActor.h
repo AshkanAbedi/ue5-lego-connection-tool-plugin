@@ -1,20 +1,12 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 #pragma once
 #include "CoreMinimal.h"
+#include "EShapeType.h"
 #include "LegoActor.generated.h"
 
 class ALegoActor;
 class UStaticMesh;
 class UStaticMeshComponent;
-
-UENUM()
-enum class EShapeType : uint8
-{
-	Box		UMETA(DisplayName = "Box"),
-	Sphere	UMETA(DisplayName = "Sphere"),
-	Capsule	UMETA(DisplayName = "Capsule"),
-	Convex	UMETA(DisplayName = "Convex"),
-};
 
 USTRUCT(BlueprintType)
 struct FConnectionData
@@ -63,11 +55,11 @@ public:
 	UPROPERTY(VisibleAnywhere, Category="Lego Settings", Meta=(DisplayName="Connections"))
 	TArray<FConnectionData> Connections;
 
-	UPROPERTY(VisibleAnywhere, Category="Lego Settings", AdvancedDisplay)
+	UPROPERTY(VisibleAnywhere, transient, Category="Lego Settings", AdvancedDisplay)
 	FGuid UniqueActorGuid; // I'm adding this here for serialization later.
 
 //-------------------------
-//These are for making the actor more designer-friendly; To have a starting shape/size/color
+//These are for making the actor more designer-friendly to edit; To have a starting shape/size/color;
 	UPROPERTY()
 	UStaticMesh* CachedBox;
 
@@ -85,8 +77,8 @@ public:
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 	virtual void PostEditMove(bool bFinished) override; // I'm overriding this here because we need the data to be updated if we move the actor in the level.
 	virtual void PostLoad() override; // I think this will be necessary as well for deserialization, maybe?! let's see...
-	void ChangeShape(); // For changing the shape in-editor
-	void ChangeColor(); // for changing the color in-editor
+	void ChangeShape(); // For changing the shape in editor
+	void ChangeColor(); // for changing the color in editor
 
 //--------------------------
 //These are the functions that I need to call from the editor tool. TODO: Maybe I'll add a Macro for it later...
@@ -95,6 +87,7 @@ public:
 	bool IsConnectedTo(const ALegoActor* OtherActor);
 	void UpdateConnectionData(FConnectionData& ConnectionData);
 	void UpdateAllConnectionData();
+
 //--------------------------
 
 protected:
@@ -102,4 +95,10 @@ protected:
 
 private:
 	void AssignGuid();
+
+	UFUNCTION(CallInEditor, Category = "Lego Settings")
+	void TestSerialize();
+
+	UFUNCTION(CallInEditor, Category = "Lego Settings")
+	void TestDeserialize();
 };
