@@ -1,12 +1,14 @@
-#include "LEGOActorDetailsCustomization.h"
+#include "LegoActorDetailsCustomization.h"
 #include "DetailLayoutBuilder.h"
 #include "DetailCategoryBuilder.h"
 #include "DetailWidgetRow.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Text/STextBlock.h"
-#include "LEGOActor.h"
+#include "LegoActor.h"
 #include "Editor.h"
 #include "Selection.h"
+#include "Styling/SlateStyleRegistry.h"
+#include "Widgets/Input/SSlider.h"
 //#include "LegoSerializer.h"
 
 TSharedRef<IDetailCustomization> FLegoActorDetailsCustomization::MakeInstance()
@@ -21,75 +23,166 @@ void FLegoActorDetailsCustomization::CustomizeDetails(IDetailLayoutBuilder& Deta
 
 	if (SelectedObjects.Num() != 1)
 	{
-		return; // For now, let's only apply single selection...
+		return; // For now, let's only apply to single selection...
 	}
 
 	SelectedLegoActor = Cast<ALegoActor>(SelectedObjects[0].Get());
+
 	if (!SelectedLegoActor.IsValid())
 	{
 		return;
 	}
 
-	IDetailCategoryBuilder& Category = DetailLayout.EditCategory("Connection Settings", FText::GetEmpty(), ECategoryPriority::Important);
+//------------------------------------------
+//Replacing the "size" setting of ALegoActor with a slider to be more designer-friendly
+	
+	IDetailCategoryBuilder& Category = DetailLayout.EditCategory("Lego Settings");
+	TSharedRef<IPropertyHandle> SizeHandle = DetailLayout.GetProperty(GET_MEMBER_NAME_CHECKED(ALegoActor, Size));
 
-	Category.AddCustomRow(FText::FromString(TEXT("Add Connection")))
-	.ValueContent()
+	Category.AddProperty(SizeHandle)  // the order is not correct; why? TODO: Checking this
+	.CustomWidget()
+	.NameContent()
 	[
-		SNew(SButton)
-		.Text(FText::FromString("Add Selected Actor as Connection"))
-		.OnClicked(this, &FLegoActorDetailsCustomization::OnAddConnectionClicked)
-		.ToolTipText(FText::FromString("Select another Lego Actor in the level and click this to connect them."))
+		SizeHandle->CreatePropertyNameWidget()
+	]
+	.ValueContent()
+	.HAlign(HAlign_Fill)
+	[
+		SNew(SSlider)
+		.MinValue(1.f)
+		.MaxValue(100.f)
+		.Value_Lambda([SizeHandle]()->float {
+			float Val = 0.f;
+			SizeHandle->GetValue(Val);
+			return Val;
+		})
+		.OnValueChanged_Lambda([SizeHandle](float NewVal) {
+			SizeHandle->SetValue(NewVal);
+		})
 	];
-	if (SelectedLegoActor->Connections.Num() > 0)
-	{
-		for (const FConnectionData& Connection : SelectedLegoActor->Connections)
-		{
-			if (Connection.ConnectedActor.IsValid())
-			{
-				ALegoActor* ActorToRemove = Connection.ConnectedActor.Get();
-				
-				Category.AddCustomRow(FText::FromString(TEXT("Connection")))
-				.NameContent()
-				[
-					SNew(STextBlock).Text(FText::FromString(Connection.ConnectedActor->GetActorLabel()))
-				]
-				.ValueContent()
-				[
-					SNew(SButton)
-					.Text(FText::FromString("Remove Connection"))
-					.OnClicked_Lambda([this, ActorToRemove](){if (SelectedLegoActor.IsValid() && ActorToRemove) { this->OnRemoveConnectionClicked(ActorToRemove);} return FReply::Handled();})
-				];
-			}
-		}
-	} else
-	{
-		Category.AddCustomRow(FText::FromString(TEXT("No Connections")))
-		.WholeRowContent()
+	
+//------------------------------------------
+	
+//------------------------------------------
+//Replacing the "Shape" setting of ALegoActor with 4 buttons representing the shapes.
+
+	TSharedRef<IPropertyHandle> ShapeHandle = DetailLayout.GetProperty(GET_MEMBER_NAME_CHECKED(ALegoActor, Shape));
+	Category.AddProperty(ShapeHandle).CustomWidget()
+	.NameContent()
+	[
+		ShapeHandle->CreatePropertyNameWidget()
+	]
+	.ValueContent()
+	.MinDesiredWidth(200.f)
+	.MaxDesiredWidth(400.f)
+	[
+		SNew(SHorizontalBox)
+
+		// A → Box
+		+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.Padding(2,0)
 		[
-			SNew(STextBlock).Text(FText::FromString("No actors connected.")).Justification(ETextJustify::Center)
-		];
-	}
+			SNew(SCheckBox)
+			.Style(FCoreStyle::Get(), "ToggleButtonCheckbox")
+			.OnCheckStateChanged_Lambda([ShapeHandle](ECheckBoxState State) {
+            if (State == ECheckBoxState::Checked)
+            {
+                ShapeHandle->SetValue((uint8)EShapeType::Box);
+            }
+			})
+			.IsChecked_Lambda([ShapeHandle]() -> ECheckBoxState {
+            uint8 EnumVal = 0;
+            ShapeHandle->GetValue(EnumVal);
+            return (EnumVal == (uint8)EShapeType::Box) ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+			})
+			[
+				SNew(SImage).Image(FSlateStyleRegistry::FindSlateStyle("LegoConnectionToolStyle")->GetBrush("LegoConnectionTool.Shape.Box"))
+			]
+		]
 
-	/*IDetailCategoryBuilder& SerializationCategory = DetailLayout.EditCategory("LEGO Serialization", FText::GetEmpty(), ECategoryPriority::Default);
+		// B → Sphere
+		+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.Padding(2,0)
+		[
+			SNew(SCheckBox)
+			.Style(FCoreStyle::Get(), "ToggleButtonCheckbox")
+			.OnCheckStateChanged_Lambda([ShapeHandle](ECheckBoxState State) {
+            if (State == ECheckBoxState::Checked)
+            {
+                ShapeHandle->SetValue((uint8)EShapeType::Sphere);
+            }
+			})
+			.IsChecked_Lambda([ShapeHandle]() -> ECheckBoxState {
+            uint8 EnumVal = 0;
+            ShapeHandle->GetValue(EnumVal);
+            return (EnumVal == (uint8)EShapeType::Sphere) ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+			})
+			[
+				SNew(SImage).Image(FSlateStyleRegistry::FindSlateStyle("LegoConnectionToolStyle")->GetBrush("LegoConnectionTool.Shape.Sphere"))
+			]
+		]
 
-	SerializationCategory.AddCustomRow(FText::FromString(TEXT("Serialize")))
-	.ValueContent()
-	[
-		SNew(SButton)
-		.Text(FText::FromString("Serialize All LEGO Actors"))
-		.OnClicked(this, &FLegoActorDetailsCustomization::OnSaveClicked)
+    // C → Capsule
+		+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.Padding(2,0)
+		[
+			SNew(SCheckBox)
+			.Style(FCoreStyle::Get(), "ToggleButtonCheckbox")
+			.OnCheckStateChanged_Lambda([ShapeHandle](ECheckBoxState State) {
+            if (State == ECheckBoxState::Checked)
+            {
+                ShapeHandle->SetValue((uint8)EShapeType::Capsule);
+            }
+			})
+			.IsChecked_Lambda([ShapeHandle]() -> ECheckBoxState {
+            uint8 EnumVal = 0;
+            ShapeHandle->GetValue(EnumVal);
+            return (EnumVal == (uint8)EShapeType::Capsule) ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+			})
+			[	
+				SNew(SImage).Image(FSlateStyleRegistry::FindSlateStyle("LegoConnectionToolStyle")->GetBrush("LegoConnectionTool.Shape.Capsule"))
+			]
+		]
+
+    // D → Convex
+		+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.Padding(2,0)
+		[
+			SNew(SCheckBox)
+			.Style(FCoreStyle::Get(), "ToggleButtonCheckbox")
+			.OnCheckStateChanged_Lambda([ShapeHandle](ECheckBoxState State) {
+            if (State == ECheckBoxState::Checked)
+            {
+                ShapeHandle->SetValue((uint8)EShapeType::Convex);
+            }
+			})
+			.IsChecked_Lambda([ShapeHandle]() -> ECheckBoxState {
+            uint8 EnumVal = 0;
+            ShapeHandle->GetValue(EnumVal);
+            return (EnumVal == (uint8)EShapeType::Convex) ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+			})
+			[
+				SNew(SImage).Image(FSlateStyleRegistry::FindSlateStyle("LegoConnectionToolStyle")->GetBrush("LegoConnectionTool.Shape.Cone"))
+			]
+		]
 	];
-
-	SerializationCategory.AddCustomRow(FText::FromString(TEXT("Deserialize")))
-	.ValueContent()
-	[
-		SNew(SButton)
-		.Text(FText::FromString("Deserialize All LEGO Actors"))
-		.OnClicked(this, &FLegoActorDetailsCustomization::OnLoadClicked)
-	];*/
+//------------------------------------------	
 }
 
-FReply FLegoActorDetailsCustomization::OnAddConnectionClicked()
+void FLegoActorDetailsCustomization::OnSizeChanged(float NewValue) const
+{
+	if (SelectedLegoActor.IsValid()){
+	
+		SelectedLegoActor->Size = NewValue;
+		SelectedLegoActor->UpdateAllConnectionData();
+	}
+}
+
+/*FReply FLegoActorDetailsCustomization::OnAddConnectionClicked()
 {
 	if (SelectedLegoActor.IsValid())
 	{
@@ -108,17 +201,16 @@ FReply FLegoActorDetailsCustomization::OnAddConnectionClicked()
 		}
 	}
 	return FReply::Handled();
-}
+}*/
 
-
-FReply FLegoActorDetailsCustomization::OnRemoveConnectionClicked(ALegoActor* ActorToRemove)
+/*FReply FLegoActorDetailsCustomization::OnRemoveConnectionClicked(ALegoActor* ActorToRemove)
 {
 	if (SelectedLegoActor.IsValid() && ActorToRemove)
 	{
 		SelectedLegoActor->RemoveConnection(ActorToRemove);
 	}
 	return FReply::Handled();
-}
+}*/
 
 /*FReply FLegoActorDetailsCustomization::OnSaveClicked()
 {

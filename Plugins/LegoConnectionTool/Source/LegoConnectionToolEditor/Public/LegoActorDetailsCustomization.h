@@ -7,7 +7,6 @@ class ALegoActor;
 
 class FLegoActorDetailsCustomization : public IDetailCustomization
 {
-
 public:
 	static TSharedRef<IDetailCustomization> MakeInstance();
 
@@ -15,12 +14,7 @@ public:
 	virtual void CustomizeDetails(IDetailLayoutBuilder& DetailLayout) override;
 
 private:
-	FReply OnAddConnectionClicked();
-	FReply OnRemoveConnectionClicked(ALegoActor* ActorToRemove);
-
-	/*FReply OnSaveClicked();
-	FReply OnLoadClicked();*/
+	void OnSizeChanged(float NewValue) const;
 
 	TWeakObjectPtr<ALegoActor> SelectedLegoActor;
-
 };

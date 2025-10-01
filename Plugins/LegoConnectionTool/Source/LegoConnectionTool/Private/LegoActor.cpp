@@ -182,8 +182,19 @@ void ALegoActor::UpdateConnectionData(FConnectionData& ConnectionData)
 		FBoxSphereBounds OtherActorBounds = StaticMeshComponent->Bounds;
 		const FVector StartPoint = ThisActorBounds.Origin;
 		const FVector EndPoint = OtherActorBounds.Origin;
-		const FVector DirectionToOther = (End - Start).GetSafeNormal();
+		const FVector DirectionToOther = (EndPoint - StartPoint).GetSafeNormal();
 		ConnectionData.ClosestPointOnThisActor = ThisActorBounds.Origin + DirectionToOther * ThisActorBounds.SphereRadius;
+		
+		#if WITH_EDITOR
+			DrawDebugSphere(
+				GetWorld(),
+				ThisActorBounds.Origin,
+				ThisActorBounds.SphereRadius,
+				16,
+				FColor::Green,
+				false, 0.1f // lifetime
+				);
+		#endif
 	}
 
 	// Forward direction angle difference
@@ -192,6 +203,13 @@ void ALegoActor::UpdateConnectionData(FConnectionData& ConnectionData)
 	const float DotProduct = FMath::Clamp(FVector::DotProduct(ThisActorForward, OtherActorForward), -1.f, 1.f); // Clamping the dot product to avoid edge cases....
 	const float AngleOfVectors = FMath::Acos(DotProduct); // This is in radians...
 	ConnectionData.ForwardAngleDifference = FMath::RadiansToDegrees(AngleOfVectors);
+	
+	#if WITH_EDITOR
+		const FVector ForwardStart = GetActorLocation();
+		const FVector ForwardEnd = ForwardStart + ThisActorForward * 100.f; // 100 units long
+		DrawDebugLine(GetWorld(), ForwardStart, ForwardEnd, FColor::Blue, false, 0.1f, 0, 2.f);
+	#endif
+	
 }
 
 void ALegoActor::TestSerialize()

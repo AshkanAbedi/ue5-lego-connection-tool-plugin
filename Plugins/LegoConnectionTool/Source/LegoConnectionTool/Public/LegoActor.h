@@ -40,17 +40,17 @@ public:
 	ALegoActor();
 	virtual void Tick(float DeltaTime) override;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default")
 	TObjectPtr<UStaticMeshComponent> StaticMeshComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Lego Settings")
-	FLinearColor Color = FLinearColor::White;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Lego Settings")
 	EShapeType Shape = EShapeType::Box;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Lego Settings", Meta=(ClampMin="1.0", ClampMax="100.0", UIMin="1.0", UIMax="100.0"))
 	float Size = 10.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Lego Settings")
+	FLinearColor Color = FLinearColor::White;
 
 	UPROPERTY(VisibleAnywhere, Category="Lego Settings", Meta=(DisplayName="Connections"))
 	TArray<FConnectionData> Connections;
@@ -87,7 +87,6 @@ public:
 	bool IsConnectedTo(const ALegoActor* OtherActor);
 	void UpdateConnectionData(FConnectionData& ConnectionData);
 	void UpdateAllConnectionData();
-
 //--------------------------
 
 protected:
