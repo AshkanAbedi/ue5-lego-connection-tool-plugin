@@ -18,5 +18,7 @@ private:
 
 	TWeakObjectPtr<ALegoActor> SelectedLegoActor;
 	TArray<TSharedPtr<FString>> ActorNames;
+	TArray<TSharedPtr<FString>> ConnectedActorNames;
 	TMap<FString, TWeakObjectPtr<ALegoActor>> NameToActorMap;
+	TMap<FString, TWeakObjectPtr<ALegoActor>> ConnectedNameToActorMap;
 };

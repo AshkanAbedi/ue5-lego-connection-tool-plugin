@@ -94,10 +94,4 @@ protected:
 
 private:
 	void AssignGuid();
-
-	UFUNCTION(CallInEditor, Category = "Lego Settings")
-	void TestSerialize();
-
-	UFUNCTION(CallInEditor, Category = "Lego Settings")
-	void TestDeserialize();
 };

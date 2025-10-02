@@ -66,7 +66,6 @@ bool ULegoLevelSerializer::SerializeLevel(UWorld* World, FString& OutJSON, const
 		{
 			AbsPath = FPaths::ProjectSavedDir() / FilePath;
 		}
-
 		return FFileHelper::SaveStringToFile(OutJSON, *AbsPath);
 	}
 	return true;
@@ -104,15 +103,15 @@ bool ULegoLevelSerializer::Load(UWorld* World, const TArray<FLegoActorImage>& Im
 
 	for (const FLegoActorImage& Image : Images)
 	{
-		if (ALegoActor* A = GuidToActor.FindRef(Image.Guid))
+		if (ALegoActor* Actor = GuidToActor.FindRef(Image.Guid))
 		{
-			A->Connections.Reset();
+			Actor->Connections.Reset();
 			
 			for (const FGuid& OtherGuid : Image.ConnectedGuids)
 			{
-				if (ALegoActor* B = GuidToActor.FindRef(OtherGuid))
+				if (ALegoActor* ConnectedActor = GuidToActor.FindRef(OtherGuid))
 				{
-					A->AddConnection(B);
+					Actor->AddConnection(ConnectedActor);
 				}
 			}
 		}

@@ -25,6 +25,7 @@ ALegoActor::ALegoActor()
 	StaticMeshComponent->SetStaticMesh(CachedBox);
 	
 	// TODO: Also add a function of changing the shape/color/size of the actor in the editor
+	// Time's up:(
 }
 
 void ALegoActor::OnConstruction(const FTransform& Transform)
@@ -32,7 +33,6 @@ void ALegoActor::OnConstruction(const FTransform& Transform)
 	Super::OnConstruction(Transform);
 	AssignGuid();
 	// TODO: Let's put a log here for testing...
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, UniqueActorGuid.ToString());
 }
 
 void ALegoActor::AssignGuid()
@@ -86,7 +86,7 @@ void ALegoActor::PostEditMove(bool bFinished)
 void ALegoActor::PostLoad()
 {
 	Super::PostLoad();
-	AssignGuid();
+	//AssignGuid();
 	//TODO: add a log for testing.
 }
 
@@ -108,6 +108,11 @@ void ALegoActor::ChangeShape()
 		break;
 	default: break;
 	}
+}
+
+void ALegoActor::ChangeColor()
+{
+	//Time's up:(
 }
 
 void ALegoActor::AddConnection(ALegoActor* OtherActor)
@@ -179,22 +184,11 @@ void ALegoActor::UpdateConnectionData(FConnectionData& ConnectionData)
 	if (StaticMeshComponent)
 	{
 		FBoxSphereBounds ThisActorBounds = StaticMeshComponent->Bounds;
-		FBoxSphereBounds OtherActorBounds = StaticMeshComponent->Bounds;
+		FBoxSphereBounds OtherActorBounds = OtherActor->StaticMeshComponent->Bounds;
 		const FVector StartPoint = ThisActorBounds.Origin;
 		const FVector EndPoint = OtherActorBounds.Origin;
 		const FVector DirectionToOther = (EndPoint - StartPoint).GetSafeNormal();
 		ConnectionData.ClosestPointOnThisActor = ThisActorBounds.Origin + DirectionToOther * ThisActorBounds.SphereRadius;
-		
-		#if WITH_EDITOR
-			DrawDebugSphere(
-				GetWorld(),
-				ThisActorBounds.Origin,
-				ThisActorBounds.SphereRadius,
-				16,
-				FColor::Green,
-				false, 0.1f // lifetime
-				);
-		#endif
 	}
 
 	// Forward direction angle difference
@@ -210,20 +204,6 @@ void ALegoActor::UpdateConnectionData(FConnectionData& ConnectionData)
 		DrawDebugLine(GetWorld(), ForwardStart, ForwardEnd, FColor::Blue, false, 0.1f, 0, 2.f);
 	#endif
 	
-}
-
-void ALegoActor::TestSerialize()
-{
-	FString Json;
-	ULegoLevelSerializer::SerializeLevel(GetWorld(), Json, TEXT("LegoTest.json"));
-	UE_LOG(LogTemp, Log, TEXT("Serialized JSON:\n%s"), *Json);
-}
-
-void ALegoActor::TestDeserialize()
-{
-	FString Json;
-	FFileHelper::LoadFileToString(Json, *(FPaths::ProjectSavedDir() / TEXT("LegoTest.json")));
-	ULegoLevelSerializer::DeserializeLevel(GetWorld(), Json);
 }
 
 void ALegoActor::BeginPlay()

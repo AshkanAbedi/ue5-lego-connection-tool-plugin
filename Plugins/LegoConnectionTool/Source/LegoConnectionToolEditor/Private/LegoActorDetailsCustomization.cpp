@@ -9,10 +9,8 @@
 #include "Editor.h"
 #include "EngineUtils.h"
 #include "LegoActor.h"
-#include "IDetailGroup.h"
-#include "Selection.h"
+#include "LegoLevelSerializer.h"
 #include "Styling/SlateStyleRegistry.h"
-//#include "LegoSerializer.h"
 
 TSharedRef<IDetailCustomization> FLegoActorDetailsCustomization::MakeInstance()
 {
@@ -37,12 +35,13 @@ void FLegoActorDetailsCustomization::CustomizeDetails(IDetailLayoutBuilder& Deta
 
 #pragma region Lego Selection Tool Section
 //------------------------------------------
-//**Creating a new section in the details panel called Lego Connection Tool
-//TODO:Needs Refactoring
+//**Creating a new section in the details panel called 'Lego Connection Tool'
+//TODO:Needs heavy refactoring
 
 	IDetailCategoryBuilder& ConnectionCategory = DetailLayout.EditCategory("Lego Connection Tool");
 	UWorld* World = SelectedLegoActor->GetWorld();
-	
+
+	// Add Connection Drop-down list
 	if (World)
 	{
 		for (TActorIterator<ALegoActor> It(World); It; ++It)
@@ -50,6 +49,10 @@ void FLegoActorDetailsCustomization::CustomizeDetails(IDetailLayoutBuilder& Deta
 			ALegoActor* OtherActor = *It;
 			if (OtherActor && OtherActor !=  SelectedLegoActor.Get())
 			{
+				if (SelectedLegoActor->IsConnectedTo(OtherActor))
+				{
+					continue;
+				}
 				FString ActorName = OtherActor->GetActorLabel();
 				ActorNames.Add(MakeShared<FString>(ActorName));
 				NameToActorMap.Add(ActorName, OtherActor);
@@ -66,29 +69,112 @@ void FLegoActorDetailsCustomization::CustomizeDetails(IDetailLayoutBuilder& Deta
 	[
 		SNew(SComboBox<TSharedPtr<FString>>)
 		.OptionsSource(&ActorNames)
+		.Content()
+        [
+        	SNew(STextBlock)
+        	.Text_Lambda([&]()
+        	{
+        			   return CurrentlySelected.IsValid() ? FText::FromString(*CurrentlySelected) : FText::FromString("Select a Lego Actor to Connect");
+        	})
+        ]
 		.OnGenerateWidget_Lambda([](const TSharedPtr<FString> InItem)
 			{
 				return SNew(STextBlock).Text(FText::FromString(*InItem));
 			})
-		.OnSelectionChanged_Lambda([this](const TSharedPtr<FString> NewValue, const ESelectInfo::Type SelectInfo)
+		.OnSelectionChanged_Lambda([this, &DetailLayout](const TSharedPtr<FString> NewValue, const ESelectInfo::Type SelectInfo)
 			{
 				if (NewValue.IsValid() && SelectedLegoActor.IsValid())
 				{
 					if (TWeakObjectPtr<ALegoActor> Target = NameToActorMap.FindRef(*NewValue); Target.IsValid())
 					   {
-						   SelectedLegoActor->AddConnection(Target.Get());
+							SelectedLegoActor->AddConnection(Target.Get());
+							DetailLayout.ForceRefreshDetails();
 					   }
 				}
 			})
+	];
+	
+	// Remove Connection Drop-down list
+	for (const FConnectionData& Connection : SelectedLegoActor->Connections)
+	{
+		if (ALegoActor* Connected = Connection.ConnectedActor.Get())
+		{
+			FString ConnectionName = Connected->GetActorLabel();
+			ConnectedActorNames.Add(MakeShared<FString>(ConnectionName));
+			ConnectedNameToActorMap.Add(ConnectionName, Connected);
+		}
+	}
+	
+	ConnectionCategory.AddCustomRow(FText::FromString("Remove Lego Connection"))
+	.NameContent()[SNew(STextBlock).Text(FText::FromString("Remove Connection"))]
+	.ValueContent()
+	.MinDesiredWidth(200.f)
+	[
+		SNew(SComboBox<TSharedPtr<FString>>)
+		.OptionsSource(&ConnectedActorNames)
 		.Content()
 		[
 			SNew(STextBlock)
 			.Text_Lambda([&]()
-		   {
-			   return CurrentlySelected.IsValid() ? FText::FromString(*CurrentlySelected) : FText::FromString("Select Actor");
-		   })
+			{
+				return CurrentlySelected.IsValid() ? FText::FromString(*CurrentlySelected) : FText::FromString("Remove a Connected Lego Actor");
+			})
 		]
+		.OnGenerateWidget_Lambda([](const TSharedPtr<FString> InItem)
+			{
+				return SNew(STextBlock).Text(FText::FromString(*InItem));
+			})
+		.OnSelectionChanged_Lambda([this, &DetailLayout](const TSharedPtr<FString> NewValue, const ESelectInfo::Type SelectInfo)
+			{
+				if (NewValue.IsValid() && SelectedLegoActor.IsValid())
+				{
+					if (TWeakObjectPtr<ALegoActor> Target = ConnectedNameToActorMap.FindRef(*NewValue); Target.IsValid())
+					{
+						 SelectedLegoActor->RemoveConnection(Target.Get());
+						 DetailLayout.ForceRefreshDetails();
+					}
+			 }
+		 })
 	];
+
+	// Save Button
+	ConnectionCategory.AddCustomRow(FText::FromString("Save Lego Data"))
+	.WholeRowContent()
+	[
+		SNew(SButton)
+		.Text(FText::FromString("Save"))
+		.OnClicked_Lambda([this]()
+		{
+			if (SelectedLegoActor.IsValid())
+			{
+				FString JSON;
+				if (ULegoLevelSerializer::SerializeLevel(SelectedLegoActor->GetWorld(), JSON, TEXT("LegoSaveTest.json")))
+				{
+					UE_LOG(LogTemp, Log, TEXT("Serialized JSON:\n%s"), *JSON);
+				}
+			}
+			return FReply::Handled();
+		})
+	];
+
+	//Load Button
+	ConnectionCategory.AddCustomRow(FText::FromString("Load Lego Data"))
+	.WholeRowContent()
+	[
+		SNew(SButton)
+		.Text(FText::FromString("Load"))
+		.OnClicked_Lambda([this]()
+		{
+			if (SelectedLegoActor.IsValid())
+			{
+				FString JSON;
+				FFileHelper::LoadFileToString(JSON, *(FPaths::ProjectSavedDir() / TEXT("LegoSaveTest.json")));
+				ULegoLevelSerializer::DeserializeLevel(SelectedLegoActor->GetWorld(), JSON);
+			}
+			return FReply::Handled();
+		})
+	];
+
 #pragma endregion
 
 #pragma region ShapeCustomization
@@ -99,10 +185,7 @@ void FLegoActorDetailsCustomization::CustomizeDetails(IDetailLayoutBuilder& Deta
 	TSharedRef<IPropertyHandle> ShapeHandle = DetailLayout.GetProperty(GET_MEMBER_NAME_CHECKED(ALegoActor, Shape));
 	IDetailCategoryBuilder& Category = DetailLayout.EditCategory("Lego Settings");
 	Category.AddProperty(ShapeHandle).CustomWidget()
-	.NameContent()
-	[
-		ShapeHandle->CreatePropertyNameWidget()
-	]
+	.NameContent()[ShapeHandle->CreatePropertyNameWidget()]
 	.ValueContent()
 	.MinDesiredWidth(200.f)
 	.MaxDesiredWidth(400.f)
@@ -212,7 +295,7 @@ void FLegoActorDetailsCustomization::CustomizeDetails(IDetailLayoutBuilder& Deta
 	auto CreateButtonShape = [&](EShapeType TargetShape, const FName& IconName)->TSharedRef<SWidget>
 	{
 		return SNew(SCheckBox)
-			.Style(FCoreStyle::Get(), "ToggleButtonCheckbox")
+		.Style(FCoreStyle::Get(), "ToggleButtonCheckbox")
 	}*/
 	// Time's up :(
 #pragma endregion

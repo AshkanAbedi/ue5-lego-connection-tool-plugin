@@ -17,7 +17,8 @@ public class LegoConnectionToolEditor : ModuleRules
 				"InputCore",
                 "Slate",    		
                 "SlateCore",		
-				"PropertyEditor", 	// For Customizing the Details Panel of an Actor
+				"PropertyEditor", // For Customizing the Details Panel of an Actor
+				"EditorSubsystem",
 				"LegoConnectionTool", 		
                 "Json", 			// For Serialization
                 "JsonUtilities"
