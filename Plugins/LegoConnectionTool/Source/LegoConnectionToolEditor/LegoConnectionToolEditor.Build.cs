@@ -13,7 +13,8 @@ public class LegoConnectionToolEditor : ModuleRules
 				"Core",
 				"CoreUObject",
 				"Engine",
-				"UnrealEd", 		
+				"UnrealEd",
+				"InputCore",
                 "Slate",    		
                 "SlateCore",		
 				"PropertyEditor", 	// For Customizing the Details Panel of an Actor

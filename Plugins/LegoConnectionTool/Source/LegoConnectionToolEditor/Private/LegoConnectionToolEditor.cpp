@@ -25,7 +25,7 @@ void FLegoConnectionToolEditorModule::StartupModule()
 
 	const FString ContentDir = FPaths::ProjectPluginsDir() / TEXT("LegoConnectionTool/Resources");
 	
-	LegoStyleSet->Set("LegoConnectionTool.Shape.Box",
+	LegoStyleSet->Set("LegoConnectionTool.Shape.Cube",
 		new FSlateVectorImageBrush(ContentDir / TEXT("Cube.svg"), FVector2D(24.f, 24.f)));
 	LegoStyleSet->Set("LegoConnectionTool.Shape.Sphere",
 		new FSlateVectorImageBrush(ContentDir / TEXT("Sphere.svg"), FVector2D(24.f, 24.f)));

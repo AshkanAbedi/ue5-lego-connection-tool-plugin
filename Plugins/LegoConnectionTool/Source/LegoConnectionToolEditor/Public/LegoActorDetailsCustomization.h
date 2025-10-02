@@ -17,4 +17,6 @@ private:
 	void OnSizeChanged(float NewValue) const;
 
 	TWeakObjectPtr<ALegoActor> SelectedLegoActor;
+	TArray<TSharedPtr<FString>> ActorNames;
+	TMap<FString, TWeakObjectPtr<ALegoActor>> NameToActorMap;
 };

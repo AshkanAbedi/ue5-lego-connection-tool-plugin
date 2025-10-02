@@ -3,12 +3,15 @@
 #include "DetailCategoryBuilder.h"
 #include "DetailWidgetRow.h"
 #include "Widgets/Input/SButton.h"
+#include "Widgets/Input/SSlider.h"
+#include "Widgets/Input/SComboBox.h"
 #include "Widgets/Text/STextBlock.h"
-#include "LegoActor.h"
 #include "Editor.h"
+#include "EngineUtils.h"
+#include "LegoActor.h"
+#include "IDetailGroup.h"
 #include "Selection.h"
 #include "Styling/SlateStyleRegistry.h"
-#include "Widgets/Input/SSlider.h"
 //#include "LegoSerializer.h"
 
 TSharedRef<IDetailCustomization> FLegoActorDetailsCustomization::MakeInstance()
@@ -25,48 +28,76 @@ void FLegoActorDetailsCustomization::CustomizeDetails(IDetailLayoutBuilder& Deta
 	{
 		return; // For now, let's only apply to single selection...
 	}
-
+	
 	SelectedLegoActor = Cast<ALegoActor>(SelectedObjects[0].Get());
-
 	if (!SelectedLegoActor.IsValid())
 	{
 		return;
 	}
 
+#pragma region Lego Selection Tool Section
 //------------------------------------------
-//Replacing the "size" setting of ALegoActor with a slider to be more designer-friendly
-	
-	IDetailCategoryBuilder& Category = DetailLayout.EditCategory("Lego Settings");
-	TSharedRef<IPropertyHandle> SizeHandle = DetailLayout.GetProperty(GET_MEMBER_NAME_CHECKED(ALegoActor, Size));
+//**Creating a new section in the details panel called Lego Connection Tool
+//TODO:Needs Refactoring
 
-	Category.AddProperty(SizeHandle)  // the order is not correct; why? TODO: Checking this
-	.CustomWidget()
-	.NameContent()
-	[
-		SizeHandle->CreatePropertyNameWidget()
-	]
+	IDetailCategoryBuilder& ConnectionCategory = DetailLayout.EditCategory("Lego Connection Tool");
+	UWorld* World = SelectedLegoActor->GetWorld();
+	
+	if (World)
+	{
+		for (TActorIterator<ALegoActor> It(World); It; ++It)
+		{
+			ALegoActor* OtherActor = *It;
+			if (OtherActor && OtherActor !=  SelectedLegoActor.Get())
+			{
+				FString ActorName = OtherActor->GetActorLabel();
+				ActorNames.Add(MakeShared<FString>(ActorName));
+				NameToActorMap.Add(ActorName, OtherActor);
+			}
+		}
+	}
+
+	static TSharedPtr<FString> CurrentlySelected;
+	
+	ConnectionCategory.AddCustomRow(FText::FromString("Add Lego Connection"))
+	.NameContent()[SNew(STextBlock).Text(FText::FromString("Add Connection"))]
 	.ValueContent()
-	.HAlign(HAlign_Fill)
+	.MinDesiredWidth(200.f)
 	[
-		SNew(SSlider)
-		.MinValue(1.f)
-		.MaxValue(100.f)
-		.Value_Lambda([SizeHandle]()->float {
-			float Val = 0.f;
-			SizeHandle->GetValue(Val);
-			return Val;
-		})
-		.OnValueChanged_Lambda([SizeHandle](float NewVal) {
-			SizeHandle->SetValue(NewVal);
-		})
+		SNew(SComboBox<TSharedPtr<FString>>)
+		.OptionsSource(&ActorNames)
+		.OnGenerateWidget_Lambda([](const TSharedPtr<FString> InItem)
+			{
+				return SNew(STextBlock).Text(FText::FromString(*InItem));
+			})
+		.OnSelectionChanged_Lambda([this](const TSharedPtr<FString> NewValue, const ESelectInfo::Type SelectInfo)
+			{
+				if (NewValue.IsValid() && SelectedLegoActor.IsValid())
+				{
+					if (TWeakObjectPtr<ALegoActor> Target = NameToActorMap.FindRef(*NewValue); Target.IsValid())
+					   {
+						   SelectedLegoActor->AddConnection(Target.Get());
+					   }
+				}
+			})
+		.Content()
+		[
+			SNew(STextBlock)
+			.Text_Lambda([&]()
+		   {
+			   return CurrentlySelected.IsValid() ? FText::FromString(*CurrentlySelected) : FText::FromString("Select Actor");
+		   })
+		]
 	];
-	
+#pragma endregion
+
+#pragma region ShapeCustomization
 //------------------------------------------
-	
-//------------------------------------------
-//Replacing the "Shape" setting of ALegoActor with 4 buttons representing the shapes.
+//**Replacing the "Shape" setting of ALegoActor with 4 buttons representing the shapes. Much cooler and more designer-friendly:D
+//TODO: Definitely needs refactoring
 
 	TSharedRef<IPropertyHandle> ShapeHandle = DetailLayout.GetProperty(GET_MEMBER_NAME_CHECKED(ALegoActor, Shape));
+	IDetailCategoryBuilder& Category = DetailLayout.EditCategory("Lego Settings");
 	Category.AddProperty(ShapeHandle).CustomWidget()
 	.NameContent()
 	[
@@ -78,7 +109,7 @@ void FLegoActorDetailsCustomization::CustomizeDetails(IDetailLayoutBuilder& Deta
 	[
 		SNew(SHorizontalBox)
 
-		// A → Box
+		// A → Cube
 		+ SHorizontalBox::Slot()
 		.AutoWidth()
 		.Padding(2,0)
@@ -97,7 +128,7 @@ void FLegoActorDetailsCustomization::CustomizeDetails(IDetailLayoutBuilder& Deta
             return (EnumVal == (uint8)EShapeType::Box) ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
 			})
 			[
-				SNew(SImage).Image(FSlateStyleRegistry::FindSlateStyle("LegoConnectionToolStyle")->GetBrush("LegoConnectionTool.Shape.Box"))
+				SNew(SImage).Image(FSlateStyleRegistry::FindSlateStyle("LegoConnectionToolStyle")->GetBrush("LegoConnectionTool.Shape.Cube"))
 			]
 		]
 
@@ -124,7 +155,7 @@ void FLegoActorDetailsCustomization::CustomizeDetails(IDetailLayoutBuilder& Deta
 			]
 		]
 
-    // C → Capsule
+		// C → Capsule
 		+ SHorizontalBox::Slot()
 		.AutoWidth()
 		.Padding(2,0)
@@ -147,7 +178,7 @@ void FLegoActorDetailsCustomization::CustomizeDetails(IDetailLayoutBuilder& Deta
 			]
 		]
 
-    // D → Convex
+		// D → Convex
 		+ SHorizontalBox::Slot()
 		.AutoWidth()
 		.Padding(2,0)
@@ -170,7 +201,43 @@ void FLegoActorDetailsCustomization::CustomizeDetails(IDetailLayoutBuilder& Deta
 			]
 		]
 	];
-//------------------------------------------	
+//------------------------------------------
+#pragma endregion
+
+#pragma region ShapeCustomizationRefactoring
+	/*TSharedRef<IPropertyHandle> ShapeHandle = DetailLayout.GetProperty(GET_MEMBER_NAME_CHECKED(ALegoActor, Shape));
+	DetailLayout.HideProperty(ShapeHandle);
+	IDetailCategoryBuilder& Category = DetailLayout.EditCategory("Lego Settings");
+
+	auto CreateButtonShape = [&](EShapeType TargetShape, const FName& IconName)->TSharedRef<SWidget>
+	{
+		return SNew(SCheckBox)
+			.Style(FCoreStyle::Get(), "ToggleButtonCheckbox")
+	}*/
+	// Time's up :(
+#pragma endregion
+
+#pragma region SizeCustomization
+//**------------------------------------------
+//Replacing the "size" setting of ALegoActor with a slider to be more designer-friendly
+	
+	TSharedRef<IPropertyHandle> SizeHandle = DetailLayout.GetProperty(GET_MEMBER_NAME_CHECKED(ALegoActor, Size));
+	DetailLayout.HideProperty(SizeHandle);
+	Category.AddCustomRow(SizeHandle->GetPropertyDisplayName())
+		.NameContent()
+		[
+			SizeHandle->CreatePropertyNameWidget()
+		]
+		.ValueContent()
+		[
+			SNew(SSlider)
+			.MinValue(1.f)
+			.MaxValue(100.f)
+			.Value_Lambda([SizeHandle](){ float V = 0.f; return (SizeHandle->GetValue(V) == FPropertyAccess::Success) ? V : 1.f; })
+			.OnValueChanged_Lambda([SizeHandle](float NewV){ SizeHandle->SetValue(NewV); })
+		];
+//------------------------------------------
+#pragma endregion
 }
 
 void FLegoActorDetailsCustomization::OnSizeChanged(float NewValue) const
@@ -181,53 +248,5 @@ void FLegoActorDetailsCustomization::OnSizeChanged(float NewValue) const
 		SelectedLegoActor->UpdateAllConnectionData();
 	}
 }
-
-/*FReply FLegoActorDetailsCustomization::OnAddConnectionClicked()
-{
-	if (SelectedLegoActor.IsValid())
-	{
-		// Find the other selected actor in the editor
-		USelection* EditorSelection = GEditor->GetSelectedActors();
-		TArray<ALegoActor*> SelectedLegoActors;
-		EditorSelection->GetSelectedObjects<ALegoActor>(SelectedLegoActors);
-
-		for (ALegoActor* ActorToAdd : SelectedLegoActors)
-		{
-			// Add connection if it's a valid, different actor
-			if (ActorToAdd && ActorToAdd != SelectedLegoActor.Get())
-			{
-				SelectedLegoActor->AddConnection(ActorToAdd);
-			}
-		}
-	}
-	return FReply::Handled();
-}*/
-
-/*FReply FLegoActorDetailsCustomization::OnRemoveConnectionClicked(ALegoActor* ActorToRemove)
-{
-	if (SelectedLegoActor.IsValid() && ActorToRemove)
-	{
-		SelectedLegoActor->RemoveConnection(ActorToRemove);
-	}
-	return FReply::Handled();
-}*/
-
-/*FReply FLegoActorDetailsCustomization::OnSaveClicked()
-{
-	if(SelectedLegoActor.IsValid())
-	{
-		FLegoSerializer::SerializeActors(SelectedLegoActor->GetWorld());
-	}
-	return FReply::Handled();
-}
-
-FReply FLegoActorDetailsCustomization::OnLoadClicked()
-{
-	if(SelectedLegoActor.IsValid())
-	{
-		FLegoSerializer::DeserializeActors(SelectedLegoActor->GetWorld());
-	}
-	return FReply::Handled();
-}*/
 
 
