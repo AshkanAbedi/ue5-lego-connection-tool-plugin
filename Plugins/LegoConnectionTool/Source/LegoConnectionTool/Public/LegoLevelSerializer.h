@@ -22,7 +22,7 @@ struct FLegoActorImage
 	FLinearColor Color = FLinearColor::White;
 
 	UPROPERTY()
-	EShapeType Shape = EShapeType::Box;
+	EShapeTypes Shape = EShapeTypes::Box;
 
 	UPROPERTY()
 	float Size = 10.0f;

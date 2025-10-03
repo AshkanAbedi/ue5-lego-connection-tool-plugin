@@ -6,7 +6,8 @@
 
 ALegoActor::ALegoActor()
 {
-	PrimaryActorTick.bCanEverTick = false; // Should it tick or not? maybe for updating its data in run-time?! Let's put false for now...I don't think it should tick.
+	
+	PrimaryActorTick.bCanEverTick = true; // for visual debug lines and shapes in-editor
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
 	RootComponent = StaticMeshComponent;
 
@@ -94,16 +95,16 @@ void ALegoActor::ChangeShape()
 {
 	switch (Shape)
 	{
-	case EShapeType::Box:
+	case EShapeTypes::Box:
 		StaticMeshComponent->SetStaticMesh(CachedBox);
 		break;
-	case EShapeType::Sphere:
+	case EShapeTypes::Sphere:
 		StaticMeshComponent->SetStaticMesh(CachedSphere);
 		break;
-	case EShapeType::Capsule:
+	case EShapeTypes::Capsule:
 		StaticMeshComponent->SetStaticMesh(CachedCapsule);
 		break;
-	case EShapeType::Convex:
+	case EShapeTypes::Convex:
 		StaticMeshComponent->SetStaticMesh(CachedConvex);
 		break;
 	default: break;

@@ -44,7 +44,7 @@ public:
 	TObjectPtr<UStaticMeshComponent> StaticMeshComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Lego Settings")
-	EShapeType Shape = EShapeType::Box;
+	EShapeTypes Shape = EShapeTypes::Box;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Lego Settings", Meta=(ClampMin="1.0", ClampMax="100.0", UIMin="1.0", UIMax="100.0"))
 	float Size = 10.0f;

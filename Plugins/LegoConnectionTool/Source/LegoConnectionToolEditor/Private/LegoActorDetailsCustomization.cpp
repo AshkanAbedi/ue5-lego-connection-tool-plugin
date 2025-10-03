@@ -202,13 +202,13 @@ void FLegoActorDetailsCustomization::CustomizeDetails(IDetailLayoutBuilder& Deta
 			.OnCheckStateChanged_Lambda([ShapeHandle](ECheckBoxState State) {
             if (State == ECheckBoxState::Checked)
             {
-                ShapeHandle->SetValue((uint8)EShapeType::Box);
+                ShapeHandle->SetValue((uint8)EShapeTypes::Box);
             }
 			})
 			.IsChecked_Lambda([ShapeHandle]() -> ECheckBoxState {
             uint8 EnumVal = 0;
             ShapeHandle->GetValue(EnumVal);
-            return (EnumVal == (uint8)EShapeType::Box) ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+            return (EnumVal == (uint8)EShapeTypes::Box) ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
 			})
 			[
 				SNew(SImage).Image(FSlateStyleRegistry::FindSlateStyle("LegoConnectionToolStyle")->GetBrush("LegoConnectionTool.Shape.Cube"))
@@ -225,13 +225,13 @@ void FLegoActorDetailsCustomization::CustomizeDetails(IDetailLayoutBuilder& Deta
 			.OnCheckStateChanged_Lambda([ShapeHandle](ECheckBoxState State) {
             if (State == ECheckBoxState::Checked)
             {
-                ShapeHandle->SetValue((uint8)EShapeType::Sphere);
+                ShapeHandle->SetValue((uint8)EShapeTypes::Sphere);
             }
 			})
 			.IsChecked_Lambda([ShapeHandle]() -> ECheckBoxState {
             uint8 EnumVal = 0;
             ShapeHandle->GetValue(EnumVal);
-            return (EnumVal == (uint8)EShapeType::Sphere) ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+            return (EnumVal == (uint8)EShapeTypes::Sphere) ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
 			})
 			[
 				SNew(SImage).Image(FSlateStyleRegistry::FindSlateStyle("LegoConnectionToolStyle")->GetBrush("LegoConnectionTool.Shape.Sphere"))
@@ -248,13 +248,13 @@ void FLegoActorDetailsCustomization::CustomizeDetails(IDetailLayoutBuilder& Deta
 			.OnCheckStateChanged_Lambda([ShapeHandle](ECheckBoxState State) {
             if (State == ECheckBoxState::Checked)
             {
-                ShapeHandle->SetValue((uint8)EShapeType::Capsule);
+                ShapeHandle->SetValue((uint8)EShapeTypes::Capsule);
             }
 			})
 			.IsChecked_Lambda([ShapeHandle]() -> ECheckBoxState {
             uint8 EnumVal = 0;
             ShapeHandle->GetValue(EnumVal);
-            return (EnumVal == (uint8)EShapeType::Capsule) ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+            return (EnumVal == (uint8)EShapeTypes::Capsule) ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
 			})
 			[	
 				SNew(SImage).Image(FSlateStyleRegistry::FindSlateStyle("LegoConnectionToolStyle")->GetBrush("LegoConnectionTool.Shape.Capsule"))
@@ -271,13 +271,13 @@ void FLegoActorDetailsCustomization::CustomizeDetails(IDetailLayoutBuilder& Deta
 			.OnCheckStateChanged_Lambda([ShapeHandle](ECheckBoxState State) {
             if (State == ECheckBoxState::Checked)
             {
-                ShapeHandle->SetValue((uint8)EShapeType::Convex);
+                ShapeHandle->SetValue((uint8)EShapeTypes::Convex);
             }
 			})
 			.IsChecked_Lambda([ShapeHandle]() -> ECheckBoxState {
             uint8 EnumVal = 0;
             ShapeHandle->GetValue(EnumVal);
-            return (EnumVal == (uint8)EShapeType::Convex) ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+            return (EnumVal == (uint8)EShapeTypes::Convex) ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
 			})
 			[
 				SNew(SImage).Image(FSlateStyleRegistry::FindSlateStyle("LegoConnectionToolStyle")->GetBrush("LegoConnectionTool.Shape.Cone"))

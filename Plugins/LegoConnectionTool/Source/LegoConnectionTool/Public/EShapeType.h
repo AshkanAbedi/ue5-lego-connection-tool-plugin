@@ -2,7 +2,7 @@
 #include "CoreMinimal.h"
 
 UENUM()
-enum class EShapeType : uint8
+enum class EShapeTypes : uint8
 {
 	Box		UMETA(DisplayName = "Box"),
 	Sphere	UMETA(DisplayName = "Sphere"),
