@@ -19,9 +19,9 @@ ALegoActor::ALegoActor()
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> ConvexMesh(TEXT("/Engine/BasicShapes/Cone.Cone"));
 
 	if (BoxMesh.Succeeded()) CachedBox = BoxMesh.Object;
-	if (BoxMesh.Succeeded()) CachedSphere = SphereMesh.Object;
-	if (BoxMesh.Succeeded()) CachedCapsule = CapsuleMesh.Object;
-	if (BoxMesh.Succeeded()) CachedConvex = ConvexMesh.Object;
+	if (SphereMesh.Succeeded()) CachedSphere = SphereMesh.Object;
+	if (CapsuleMesh.Succeeded()) CachedCapsule = CapsuleMesh.Object;
+	if (ConvexMesh.Succeeded()) CachedConvex = ConvexMesh.Object;
 
 	StaticMeshComponent->SetStaticMesh(CachedBox);
 	

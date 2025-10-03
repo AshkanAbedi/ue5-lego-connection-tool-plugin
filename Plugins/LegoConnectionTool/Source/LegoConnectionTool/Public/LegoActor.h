@@ -58,7 +58,7 @@ public:
 	UPROPERTY(VisibleAnywhere, transient, Category="Lego Settings", AdvancedDisplay)
 	FGuid UniqueActorGuid; // I'm adding this here for serialization later.
 
-//-------------------------
+//**-------------------------
 //These are for making the actor more designer-friendly to edit; To have a starting shape/size/color;
 	UPROPERTY()
 	UStaticMesh* CachedBox;
@@ -80,7 +80,7 @@ public:
 	void ChangeShape(); // For changing the shape in editor
 	void ChangeColor(); // for changing the color in editor
 
-//--------------------------
+//**--------------------------
 //These are the functions that I need to call from the editor tool. TODO: Maybe I'll add a Macro for it later...
 	void AddConnection(ALegoActor* OtherActor);
 	void RemoveConnection(ALegoActor* OtherActor);

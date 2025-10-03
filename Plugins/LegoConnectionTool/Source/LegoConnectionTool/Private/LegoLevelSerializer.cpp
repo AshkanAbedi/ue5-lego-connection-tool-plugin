@@ -6,10 +6,11 @@
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 
-void ULegoLevelSerializer::Save(ALegoActor* Actor, FLegoActorImage& OutImage)
+void ULegoLevelSerializer::SaveActorToImage(const ALegoActor* Actor, FLegoActorImage& OutImage)
 {
 	if (!Actor) return;
 
+	OutImage.Version = 1;
 	OutImage.Guid = Actor->UniqueActorGuid;
 	OutImage.Transform = Actor->GetActorTransform();
 	OutImage.Color = Actor->Color;
@@ -19,23 +20,24 @@ void ULegoLevelSerializer::Save(ALegoActor* Actor, FLegoActorImage& OutImage)
 
 	for (const FConnectionData& Connection : Actor->Connections)
 	{
-		if (ALegoActor* Other = Connection.ConnectedActor.Get())
+		if (const ALegoActor* Other = Connection.ConnectedActor.Get())
 		{
 			OutImage.ConnectedGuids.Add(Other->UniqueActorGuid);
 		}
 	}
 }
 
-bool ULegoLevelSerializer::SerializeLevel(UWorld* World, FString& OutJSON, const FString& FilePath)
+bool ULegoLevelSerializer::SerializeLevelToJSON(UWorld* World, FString& OutJSON, const FString& FilePath)
 {
 	if (!World) return false;
 
 	TArray<FLegoActorImage> Images;
 
-	for (TActorIterator<ALegoActor> i(World); i; ++i)
+	for (TActorIterator<ALegoActor> It(World); It; ++It)
 	{
+		ALegoActor* Actor = *It;
 		FLegoActorImage NewImage;
-		Save(*i, NewImage);
+		SaveActorToImage(Actor, NewImage);
 		Images.Add(MoveTemp(NewImage));
 	}
 
@@ -71,14 +73,15 @@ bool ULegoLevelSerializer::SerializeLevel(UWorld* World, FString& OutJSON, const
 	return true;
 }
 
-bool ULegoLevelSerializer::Load(UWorld* World, const TArray<FLegoActorImage>& Images)
+bool ULegoLevelSerializer::LoadActorsFromImage(UWorld* World, const TArray<FLegoActorImage>& Images)
 {
 	if (!World) return false;
 	
 	TMap<FGuid, ALegoActor*> GuidToActor;
-	for (TActorIterator<ALegoActor> i(World); i; ++i)
+	for (TActorIterator<ALegoActor> It(World); It; ++It)
 	{
-		GuidToActor.Add(i->UniqueActorGuid, *i);
+		ALegoActor* Actor = *It;
+		GuidToActor.Add(Actor->UniqueActorGuid, Actor);
 	}
 
 	for (const FLegoActorImage& Image : Images)
@@ -97,8 +100,9 @@ bool ULegoLevelSerializer::Load(UWorld* World, const TArray<FLegoActorImage>& Im
 		// Apply properties
 		Actor->SetActorTransform(Image.Transform);
 		Actor->Color = Image.Color;
-		Actor->Shape = Image.Shape; // TODO: loading the actual default static mesh component of the actor as well.
-		Actor->Size  = Image.Size;
+		Actor->Shape = Image.Shape;
+		Actor->ChangeShape();
+		Actor->Size = Image.Size;
 	}
 
 	for (const FLegoActorImage& Image : Images)
@@ -106,12 +110,14 @@ bool ULegoLevelSerializer::Load(UWorld* World, const TArray<FLegoActorImage>& Im
 		if (ALegoActor* Actor = GuidToActor.FindRef(Image.Guid))
 		{
 			Actor->Connections.Reset();
-			
 			for (const FGuid& OtherGuid : Image.ConnectedGuids)
 			{
 				if (ALegoActor* ConnectedActor = GuidToActor.FindRef(OtherGuid))
 				{
-					Actor->AddConnection(ConnectedActor);
+					if (!Actor->IsConnectedTo(ConnectedActor))
+					{
+						Actor->AddConnection(ConnectedActor);	
+					}
 				}
 			}
 		}
@@ -119,7 +125,7 @@ bool ULegoLevelSerializer::Load(UWorld* World, const TArray<FLegoActorImage>& Im
 	return true;
 }
 
-bool ULegoLevelSerializer::DeserializeLevel(UWorld* World, const FString& InJSON)
+bool ULegoLevelSerializer::DeserializeLevelFromJSON(UWorld* World, const FString& InJSON)
 {
 	if (!World) return false;
 
@@ -142,7 +148,7 @@ bool ULegoLevelSerializer::DeserializeLevel(UWorld* World, const FString& InJSON
 			}
 		}
 	}
-	return Load(World, Images);
+	return LoadActorsFromImage(World, Images);
 }
 
 

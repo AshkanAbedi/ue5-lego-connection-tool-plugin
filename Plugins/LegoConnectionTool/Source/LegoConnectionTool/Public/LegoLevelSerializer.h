@@ -13,6 +13,9 @@ struct FLegoActorImage
 	GENERATED_BODY()
 
 	UPROPERTY()
+	int32 Version = 1;
+
+	UPROPERTY()
 	FGuid Guid;
 
 	UPROPERTY()
@@ -37,10 +40,10 @@ class LEGOCONNECTIONTOOL_API ULegoLevelSerializer : public UObject
 	GENERATED_BODY()
 	
 public:
-	static void Save(ALegoActor* Actor, FLegoActorImage& OutImage);
-	static bool Load(UWorld* World, const TArray<FLegoActorImage>& Images);
-	static bool SerializeLevel(UWorld* World, FString& OutJSON, const FString& FilePath = TEXT(""));
-	static bool DeserializeLevel(UWorld* World, const FString& InJSON);
+	static void SaveActorToImage(const ALegoActor* Actor, FLegoActorImage& OutImage);
+	static bool SerializeLevelToJSON(UWorld* World, FString& OutJSON, const FString& FilePath = TEXT(""));
+	static bool LoadActorsFromImage(UWorld* World, const TArray<FLegoActorImage>& Images);
+	static bool DeserializeLevelFromJSON(UWorld* World, const FString& InJSON);
 private:
 
 	

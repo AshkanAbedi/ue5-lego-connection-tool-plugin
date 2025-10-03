@@ -148,7 +148,7 @@ void FLegoActorDetailsCustomization::CustomizeDetails(IDetailLayoutBuilder& Deta
 			if (SelectedLegoActor.IsValid())
 			{
 				FString JSON;
-				if (ULegoLevelSerializer::SerializeLevel(SelectedLegoActor->GetWorld(), JSON, TEXT("LegoSaveTest.json")))
+				if (ULegoLevelSerializer::SerializeLevelToJSON(SelectedLegoActor->GetWorld(), JSON, TEXT("LegoSaveTest.json")))
 				{
 					UE_LOG(LogTemp, Log, TEXT("Serialized JSON:\n%s"), *JSON);
 				}
@@ -169,7 +169,7 @@ void FLegoActorDetailsCustomization::CustomizeDetails(IDetailLayoutBuilder& Deta
 			{
 				FString JSON;
 				FFileHelper::LoadFileToString(JSON, *(FPaths::ProjectSavedDir() / TEXT("LegoSaveTest.json")));
-				ULegoLevelSerializer::DeserializeLevel(SelectedLegoActor->GetWorld(), JSON);
+				ULegoLevelSerializer::DeserializeLevelFromJSON(SelectedLegoActor->GetWorld(), JSON);
 			}
 			return FReply::Handled();
 		})
@@ -321,15 +321,6 @@ void FLegoActorDetailsCustomization::CustomizeDetails(IDetailLayoutBuilder& Deta
 		];
 //------------------------------------------
 #pragma endregion
-}
-
-void FLegoActorDetailsCustomization::OnSizeChanged(float NewValue) const
-{
-	if (SelectedLegoActor.IsValid()){
-	
-		SelectedLegoActor->Size = NewValue;
-		SelectedLegoActor->UpdateAllConnectionData();
-	}
 }
 
 
