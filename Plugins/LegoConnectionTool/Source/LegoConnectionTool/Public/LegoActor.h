@@ -1,6 +1,7 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 #pragma once
 #include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
 #include "EShapeTypes.h"
 #include "LegoActor.generated.h"
 
@@ -25,7 +26,7 @@ struct FConnectionData
 	UPROPERTY(VisibleAnywhere, Category="Connection Settings")
 	float ForwardAngleDifference = 0.0f; // for checking the forward angle difference
 	
-	bool operator==(const ALegoActor* Other) const // I'm overloading the == operator here so that I can easily check 'ConnectedActor' to 'other' later in the code.
+	bool operator==(const ALegoActor* Other) const // I'm overloading the == operator here so that I can easily check the weak pointer to raw pointer.
 	{
 		return ConnectedActor == Other; 
 	}
@@ -74,11 +75,16 @@ public:
 //-------------------------
 
 	virtual void OnConstruction(const FTransform& Transform) override;
+	
+#if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
-	virtual void PostEditMove(bool bFinished) override; // I'm overriding this here because we need the data to be updated if we move the actor in the level.
+	virtual void PostEditMove(bool bFinished) override;// I'm overriding this here because we need the data to be updated if we move the actor in the level.
+#endif
+	
 	virtual void PostLoad() override; // I think this will be necessary as well for deserialization, maybe?! let's see...
-	void ChangeShape(); // For changing the shape in editor
-	void ChangeColor(); // for changing the color in editor
+	void ChangeShape(); 
+	void ChangeSize();
+	void ChangeColor();
 
 //**--------------------------
 //These are the functions that I need to call from the editor tool. TODO: Maybe I'll add a Macro for it later...

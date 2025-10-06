@@ -42,6 +42,16 @@ public class LegoConnectionTool : ModuleRules
 			}
 			);
 		
+		if (Target.bBuildEditor)
+		{
+			PrivateDependencyModuleNames.AddRange(
+				new string[]
+				{
+					"UnrealEd"
+				}
+			);
+		}
+		
 		DynamicallyLoadedModuleNames.AddRange(
 			new string[]
 			{

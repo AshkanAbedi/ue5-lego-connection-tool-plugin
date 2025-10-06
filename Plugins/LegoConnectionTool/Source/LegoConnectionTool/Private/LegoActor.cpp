@@ -1,8 +1,9 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 #include "LegoActor.h"
+#include "LegoLevelSerializer.h"
 #include "Components/StaticMeshComponent.h"
 #include "UObject/ConstructorHelpers.h"
-#include "LegoLevelSerializer.h"
+#include "Engine/World.h"
 
 ALegoActor::ALegoActor()
 {
@@ -18,14 +19,14 @@ ALegoActor::ALegoActor()
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> CapsuleMesh(TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> ConvexMesh(TEXT("/Engine/BasicShapes/Cone.Cone"));
 
-	if (BoxMesh.Succeeded()) CachedBox = BoxMesh.Object;
-	if (SphereMesh.Succeeded()) CachedSphere = SphereMesh.Object;
-	if (CapsuleMesh.Succeeded()) CachedCapsule = CapsuleMesh.Object;
-	if (ConvexMesh.Succeeded()) CachedConvex = ConvexMesh.Object;
+	if (BoxMesh.Succeeded()) CachedBox = BoxMesh.Object.Get();
+	if (SphereMesh.Succeeded()) CachedSphere = SphereMesh.Object.Get();
+	if (CapsuleMesh.Succeeded()) CachedCapsule = CapsuleMesh.Object.Get();
+	if (ConvexMesh.Succeeded()) CachedConvex = ConvexMesh.Object.Get();
 
 	StaticMeshComponent->SetStaticMesh(CachedBox);
 	
-	// TODO: Also add a function of changing the shape/color/size of the actor in the editor
+	// TODO: Also add a function of changing the color/size of the actor in the editor
 	// Time's up:(
 }
 
@@ -44,6 +45,7 @@ void ALegoActor::AssignGuid()
 	}
 }
 
+#if WITH_EDITOR
 void ALegoActor::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
@@ -84,6 +86,8 @@ void ALegoActor::PostEditMove(bool bFinished)
 	}
 }
 
+#endif
+
 void ALegoActor::PostLoad()
 {
 	Super::PostLoad();
@@ -109,6 +113,11 @@ void ALegoActor::ChangeShape()
 		break;
 	default: break;
 	}
+}
+
+void ALegoActor::ChangeSize()
+{
+	//Time's up:(
 }
 
 void ALegoActor::ChangeColor()
@@ -181,7 +190,7 @@ void ALegoActor::UpdateConnectionData(FConnectionData& ConnectionData)
 	GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, CollisionParams);
 	ConnectionData.bHasLOS = !HitResult.bBlockingHit;
 
-	// Closes point on Bounding Sphere
+	// Closest point on Bounding Sphere
 	if (StaticMeshComponent)
 	{
 		FBoxSphereBounds ThisActorBounds = StaticMeshComponent->Bounds;
@@ -198,13 +207,6 @@ void ALegoActor::UpdateConnectionData(FConnectionData& ConnectionData)
 	const float DotProduct = FMath::Clamp(FVector::DotProduct(ThisActorForward, OtherActorForward), -1.f, 1.f); // Clamping the dot product to avoid edge cases....
 	const float AngleOfVectors = FMath::Acos(DotProduct); // This is in radians...
 	ConnectionData.ForwardAngleDifference = FMath::RadiansToDegrees(AngleOfVectors);
-	
-	#if WITH_EDITOR
-		const FVector ForwardStart = GetActorLocation();
-		const FVector ForwardEnd = ForwardStart + ThisActorForward * 100.f; // 100 units long
-		DrawDebugLine(GetWorld(), ForwardStart, ForwardEnd, FColor::Blue, false, 0.1f, 0, 2.f);
-	#endif
-	
 }
 
 void ALegoActor::BeginPlay()
