@@ -289,7 +289,6 @@ void FLegoActorDetailsCustomization::CustomizeDetails(IDetailLayoutBuilder& Deta
 
 #pragma region ShapeCustomizationRefactoring
 	/*TSharedRef<IPropertyHandle> ShapeHandle = DetailLayout.GetProperty(GET_MEMBER_NAME_CHECKED(ALegoActor, Shape));
-	DetailLayout.HideProperty(ShapeHandle);
 	IDetailCategoryBuilder& Category = DetailLayout.EditCategory("Lego Settings");
 
 	auto CreateButtonShape = [&](EShapeType TargetShape, const FName& IconName)->TSharedRef<SWidget>
