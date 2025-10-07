@@ -73,17 +73,45 @@ bool ULegoLevelSerializer::SerializeLevelToJSON(UWorld* World, FString& OutJSON,
 	return true;
 }
 
+bool ULegoLevelSerializer::DeserializeLevelFromJSON(UWorld* World, const FString& InJSON)
+{
+	if (!World) return false;
+
+	TArray<FLegoActorImage> Images;
+	TArray<TSharedPtr<FJsonValue>> JSONValues;
+	TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(InJSON);
+	if (!FJsonSerializer::Deserialize(Reader, JSONValues))
+	{
+		return false;
+	}
+	
+	for (auto Value : JSONValues)
+	{
+		if (TSharedPtr<FJsonObject> Obj = Value->AsObject())
+		{
+			FLegoActorImage Image;
+			if (FJsonObjectConverter::JsonObjectToUStruct(Obj.ToSharedRef(), FLegoActorImage::StaticStruct(), &Image, 0, 0))
+			{
+				Images.Add(MoveTemp(Image));
+			}
+		}
+	}
+	return LoadActorsFromImage(World, Images);
+}
+
 bool ULegoLevelSerializer::LoadActorsFromImage(UWorld* World, const TArray<FLegoActorImage>& Images)
 {
 	if (!World) return false;
 	
 	TMap<FGuid, ALegoActor*> GuidToActor;
+	
+	//BUG: If we have multiple LegoActors and then delete all of them except one, after loading, something wrong goes on here...Needs debugging.
 	for (TActorIterator<ALegoActor> It(World); It; ++It)
 	{
 		ALegoActor* Actor = *It;
 		GuidToActor.Add(Actor->UniqueActorGuid, Actor);
 	}
-
+	
 	for (const FLegoActorImage& Image : Images)
 	{
 		ALegoActor* Actor = GuidToActor.FindRef(Image.Guid);
@@ -96,6 +124,7 @@ bool ULegoLevelSerializer::LoadActorsFromImage(UWorld* World, const TArray<FLego
 
 			Actor->UniqueActorGuid = Image.Guid;
 			GuidToActor.Add(Image.Guid, Actor);
+			
 		}
 		// Apply properties
 		Actor->SetActorTransform(Image.Transform);
@@ -123,32 +152,6 @@ bool ULegoLevelSerializer::LoadActorsFromImage(UWorld* World, const TArray<FLego
 		}
 	}
 	return true;
-}
-
-bool ULegoLevelSerializer::DeserializeLevelFromJSON(UWorld* World, const FString& InJSON)
-{
-	if (!World) return false;
-
-	TArray<FLegoActorImage> Images;
-	TArray<TSharedPtr<FJsonValue>> JSONValues;
-	TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(InJSON);
-	if (!FJsonSerializer::Deserialize(Reader, JSONValues))
-	{
-		return false;
-	}
-	
-	for (auto Value : JSONValues)
-	{
-		if (TSharedPtr<FJsonObject> Obj = Value->AsObject())
-		{
-			FLegoActorImage Image;
-			if (FJsonObjectConverter::JsonObjectToUStruct(Obj.ToSharedRef(), FLegoActorImage::StaticStruct(), &Image, 0, 0))
-			{
-				Images.Add(MoveTemp(Image));
-			}
-		}
-	}
-	return LoadActorsFromImage(World, Images);
 }
 
 

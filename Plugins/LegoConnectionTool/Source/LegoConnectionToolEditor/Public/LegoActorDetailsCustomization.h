@@ -14,7 +14,6 @@ public:
 	virtual void CustomizeDetails(IDetailLayoutBuilder& DetailLayout) override;
 
 private:
-	
 	TWeakObjectPtr<ALegoActor> SelectedLegoActor;
 	TArray<TSharedPtr<FString>> ActorNames;
 	TArray<TSharedPtr<FString>> ConnectedActorNames;

@@ -80,8 +80,9 @@ public:
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 	virtual void PostEditMove(bool bFinished) override;// I'm overriding this here because we need the data to be updated if we move the actor in the level.
 #endif
-	
+
 	virtual void PostLoad() override; // I think this will be necessary as well for deserialization, maybe?! let's see...
+	
 	void ChangeShape(); 
 	void ChangeSize();
 	void ChangeColor();

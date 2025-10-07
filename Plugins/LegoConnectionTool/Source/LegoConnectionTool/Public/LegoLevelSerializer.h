@@ -17,7 +17,7 @@ struct FLegoActorImage
 
 	UPROPERTY()
 	FGuid Guid;
-
+	
 	UPROPERTY()
 	FTransform Transform;
 
