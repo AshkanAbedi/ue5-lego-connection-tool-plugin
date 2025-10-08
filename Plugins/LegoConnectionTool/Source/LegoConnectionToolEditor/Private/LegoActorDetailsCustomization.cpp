@@ -6,7 +6,6 @@
 #include "Widgets/Input/SSlider.h"
 #include "Widgets/Input/SComboBox.h"
 #include "Widgets/Text/STextBlock.h"
-#include "Editor.h"
 #include "EngineUtils.h"
 #include "LegoActor.h"
 #include "LegoLevelSerializer.h"
@@ -295,8 +294,8 @@ void FLegoActorDetailsCustomization::CustomizeDetails(IDetailLayoutBuilder& Deta
 	{
 		return SNew(SCheckBox)
 		.Style(FCoreStyle::Get(), "ToggleButtonCheckbox")
-	}*/
-	// Time's up :(
+
+	// Time's up :( */
 #pragma endregion
 
 #pragma region SizeCustomization

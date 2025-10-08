@@ -168,11 +168,6 @@ bool ALegoActor::IsConnectedTo(const ALegoActor* OtherActor)
 
 void ALegoActor::UpdateAllConnectionData()
 {
-
-	/*Connections.RemoveAll([this](const FConnectionData& Connection)
-	{
-		return !Connection.ConnectedActor.IsValid(); // Remove any invalid connections
-	});*/
 	
 	for (FConnectionData& ConnectionData : Connections)
 	{
