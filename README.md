@@ -1,4 +1,4 @@
-# LegoConnectionTool_Plugin_UE5
+# ue5-lego-connection-tool-plugin
 The Connection Tool for ALegoActor Inside Unreal Engine 5
 
 - I packaged the plugin and and it is ready to use in other Unreal Engine projects.
