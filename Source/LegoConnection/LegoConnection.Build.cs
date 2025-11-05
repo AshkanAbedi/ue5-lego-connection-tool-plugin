@@ -2,9 +2,9 @@
 
 using UnrealBuildTool;
 
-public class legotool_plugin : ModuleRules
+public class LegoConnection : ModuleRules
 {
-	public legotool_plugin(ReadOnlyTargetRules Target) : base(Target)
+	public LegoConnection(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	

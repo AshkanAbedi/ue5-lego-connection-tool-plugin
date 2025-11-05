@@ -5,7 +5,7 @@
 	"Description": "",
 	"Modules": [
 		{
-			"Name": "legotool_plugin",
+			"Name": "LegoConnection",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		}

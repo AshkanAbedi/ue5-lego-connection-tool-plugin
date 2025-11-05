@@ -1,5 +1,6 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 #pragma once
+#include <chrono>
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "EShapeTypes.h"
@@ -8,6 +9,25 @@
 class ALegoActor;
 class UStaticMesh;
 class UStaticMeshComponent;
+
+struct FMyTimer
+{
+	std::chrono::time_point<std::chrono::steady_clock> Start, End;
+	std::chrono::duration<float> Duration {0.0f};
+
+	FMyTimer()
+	{
+		Start = std::chrono::high_resolution_clock::now();
+	}
+
+	~FMyTimer()
+	{
+		End = std::chrono::high_resolution_clock::now();
+		Duration = End - Start;
+		const float MS = Duration.count() * 1000.f;
+		UE_LOG(LogTemp, Warning, TEXT("Time taken: %f ms"), MS);
+	}
+};
 
 USTRUCT(BlueprintType)
 struct FConnectionData

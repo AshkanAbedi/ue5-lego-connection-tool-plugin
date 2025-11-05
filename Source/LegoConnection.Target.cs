@@ -3,13 +3,13 @@
 using UnrealBuildTool;
 using System.Collections.Generic;
 
-public class legotool_pluginTarget : TargetRules
+public class LegoConnectionTarget : TargetRules
 {
-	public legotool_pluginTarget(TargetInfo Target) : base(Target)
+	public LegoConnectionTarget(TargetInfo Target) : base(Target)
 	{
 		Type = TargetType.Game;
 		DefaultBuildSettings = BuildSettingsVersion.V5;
 		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_6;
-		ExtraModuleNames.Add("legotool_plugin");
+		ExtraModuleNames.Add("LegoConnection");
 	}
 }

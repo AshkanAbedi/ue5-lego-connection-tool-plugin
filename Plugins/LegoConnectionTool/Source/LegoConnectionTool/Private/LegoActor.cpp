@@ -177,6 +177,8 @@ void ALegoActor::UpdateAllConnectionData()
 
 void ALegoActor::UpdateConnectionData(FConnectionData& ConnectionData)
 {
+	FMyTimer Timer;
+	
 	ALegoActor* OtherActor = ConnectionData.ConnectedActor.Get();
 	if (!OtherActor || !GetWorld()) return;
 
